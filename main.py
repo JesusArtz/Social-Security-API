@@ -1,5 +1,7 @@
 from crypt import methods
+from distutils.log import error
 import json
+from locale import currency
 from methods.genUUID import GenerateUUID
 from flask import Flask, jsonify, request
 import flask_cors
@@ -316,42 +318,33 @@ def GetPosts():
     return jsonify(resp)
 
 
-@app.route('/api/v1/payment/createPaymentIntent', methods=['GET'])
-def createPaymentIntent():
-
-
-    
-    intent = stripe.PaymentIntent.create(
-        amount= 10000,
-        currency= "usd",
-        payment_method_types= ["card"]
-    )
-
-    clientSecret = intent['id']
-
-    print(clientSecret)
-    return jsonify({
-        "clientSecret": clientSecret,
-        "error": ''
-    })
-
-@app.route('/api/v1/payment/confirmIntent', methods=['POST'])
+@app.route('/api/v1/payment/submitPaymentInfo', methods=['POST'])
 def confirmPaymentIntent():
     
-    data = request.get_json()
-    
-    clientSecret = data['clientSecret']
-    
-    confirm = stripe.PaymentIntent.confirm(
-        f"{clientSecret}",
-        payment_method='pm_card_visa'
-    )
-    
-    if confirm['charges']['data'][0]['paid']:
+    try:
         
-        return jsonify({'response':'correct payment'})
-    
-    return jsonify({'response':'error'})
+        data = request.get_json()
+
+        charge = stripe.Charge.create(
+            amount=data['amount'],
+            currency='usd',
+            description=data['description'],
+            source='tok_visa',
+            idempotency_key=data['id']
+        )
+        
+        if charge['paid']:
+            
+            updated = md.setDonator(data['username'])
+            
+            if updated:
+                
+                return jsonify(charge)
+        
+    except stripe.error.StripeError as e:
+        
+        print(e)
+        return 'error'
     
 @app.route('/api/v1/users/getProfileById', methods=['POST'])
 def getProfileById():

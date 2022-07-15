@@ -287,4 +287,34 @@ def getPostsById(id):
     
     return obj
 
+def getIdByUsername(username):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = "SELECT id FROM Users WHERE username = '%s'" %username
+    
+    cursor.execute(query)
+    
+    data = cursor.fetchone()
+    
+    return data[0]
+
+def setDonator(username):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    id = getIdByUsername(username)
+    
+    query = "UPDATE Profiles SET is_donator = true AND tier_donator = '1' WHERE user_id = '%s'" %id
+    
+    cursor.execute(query)
+    
+    con.commit()
+    
+    return True
+
 
