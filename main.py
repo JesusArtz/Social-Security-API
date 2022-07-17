@@ -16,181 +16,198 @@ flask_cors.CORS(app)
 
 stripe.api_key = "sk_test_51LLGC6L6X1F1cMlGS8lon3H0IrNl8QMpHdxF5o7ADhehnv5xI6F5fdwTvfPKuAKbpusEUumurNwNAoeVzcaeAWtJ00RHJ1hwbY"
 
+
+"""
+
+REGISTER ROUTE
+
+Gets three elements of the json, username, email and password,
+then compares if the username or email exists, if not proceed
+to create the account.
+
+Response codes:
+
+User already exist - 409
+
+Error during session creation - 430
+
+"""
+
+
 @app.route('/api/v1/users/register', methods=['POST'])
 def Register():
 
-    if request.method == 'POST':
+    data = request.get_json()
 
-        data = request.get_json()
+    username = data['username']
+    email = data['email']
+    password = data['password']
 
-        username = data['username']
-        email = data['email']
-        password = data['password']
+    existentEmail = md.getExistEmail(email)
+    existentUsername = md.getExistUsername(username)
 
-        if password and email and username:
+    if existentEmail or existentUsername:
 
-            existentEmail = md.getExistEmail(email)
-            existentUsername = md.getExistUsername(username)
+        hPass = genph(password)
 
-            if existentEmail or existentUsername:
+        md.registerUser(email, username, hPass)
 
-                hPass = genph(password)
+        getHashedPass = md.getHash(email)
 
-                responseModel = md.registerUser(email, username, hPass)
+        respLogin = md.loginUser(email, getHashedPass[0])
 
-                if responseModel:
+        getToken = f"{GenerateUUID()}"
 
-                    getHashedPass = md.getHash(email)
+        respSession = md.generateSession(
+            respLogin['id'], getToken)
 
-                    unHashPass = checkph(getHashedPass[0], password)
+        if respSession:
 
-                    if unHashPass:
+            return jsonify({
+                "id": respLogin['id'],
+                "username": respLogin['username'],
+                "email": respLogin['email'],
+                "token": f"{getToken}",
+                "is_active": respLogin['is_active'],
+                "is_staff": respLogin['is_staff'],
+                "profile": {
+                    'id': 0,
+                    'name': 'none',
+                    'description': 'none',
+                    'image': 'none'
+                }
+            })
 
-                        respLogin = md.loginUser(email, getHashedPass[0])
+        return jsonify({'response': 430})
 
-                        if respLogin:
+    return jsonify({'response': 409})
 
-                            getToken = f"{GenerateUUID()}"
 
-                            respSession = md.generateSession(
-                                respLogin['id'], getToken)
+"""
 
-                            if respSession:
+LOGIN ROUTE
 
-                                return jsonify({
-                                    "id": respLogin['id'],
-                                    "username": respLogin['username'],
-                                    "email": respLogin['email'],
-                                    "token": f"{getToken}",
-                                    "is_active": respLogin['is_active'],
-                                    "is_staff": respLogin['is_staff'],
-                                    "profile": {
-                                        'id': 0,
-                                        'name': 'none',
-                                        'description': 'none',
-                                        'image': 'none'
-                                    }
-                                })
+It obtains two elements of the json, email and password, later
+they are compared, and if they exist, a profile associated with
+the user is searched to later send it together with the session.
 
-                            return jsonify({'response': 'an error as ocurred during creation of session'})
+Response codes:
 
-                        return jsonify({'response': 'an error as ocurred'})
+No data in json fields - 403
 
-                return jsonify({'response': 'an error as ocurred on register'})
+Error during session creation - 430
 
-            return jsonify({'response': 'Email or username already exist'})
+Incorrect email or password - 417
 
-        return jsonify({'response': 'No data'})
-
-    return jsonify({'response': 'Method not allowed'})
+"""
 
 
 @app.route('/api/v1/users/login', methods=['POST'])
 def Login():
 
-    if request.method == 'POST':
+    data = request.get_json()
 
-        data = request.get_json()
+    email = data['email']
+    password = data['password']
 
-        if data:
+    if email and password:
 
-            email = data['email']
-            password = data['password']
+        getHashedPass = md.getHash(email)
 
-            if email and password:
+        if getHashedPass[0]:
 
-                getHashedPass = md.getHash(email)
+            unHashPass = checkph(getHashedPass[0], password)
 
-                if getHashedPass[0]:
+            if unHashPass:
 
-                    unHashPass = checkph(getHashedPass[0], password)
+                respLogin = md.loginUser(email, getHashedPass[0])
 
-                    print(unHashPass)
+                getToken = f"{GenerateUUID()}"
 
-                    if unHashPass:
+                respSession = md.generateSession(
+                    respLogin['id'], getToken)
 
-                        respLogin = md.loginUser(email, getHashedPass[0])
+                if respSession:
 
-                        if respLogin:
+                    profileData = md.getProfile(respLogin['id'])
 
-                            getToken = f"{GenerateUUID()}"
+                    if profileData:
 
-                            respSession = md.generateSession(
-                                respLogin['id'], getToken)
+                        return jsonify({
+                            "id": respLogin['id'],
+                            "username": respLogin['username'],
+                            "email": respLogin['email'],
+                            "token": f"{getToken}",
+                            "is_active": respLogin['is_active'],
+                            "is_staff": respLogin['is_staff'],
+                            "profile": {
+                                'id': profileData[0],
+                                'name': profileData[1],
+                                'description': profileData[2],
+                                'image': profileData[3]
+                            }
+                        })
 
-                            if respSession:
+                    return jsonify({
+                        "id": respLogin['id'],
+                        "username": respLogin['username'],
+                        "email": respLogin['email'],
+                        "token": f"{getToken}",
+                        "is_active": respLogin['is_active'],
+                        "is_staff": respLogin['is_staff'],
+                        "profile": {
+                            'id': 0,
+                            'name': 'none',
+                            'description': 'none',
+                            'image': 'none'
+                        }
+                    })
 
-                                profileData = md.getProfile(respLogin['id'])
+                return jsonify({'response': 430})
 
-                                if profileData:
+            return jsonify({'response': 417})
 
-                                    return jsonify({
-                                        "id": respLogin['id'],
-                                        "username": respLogin['username'],
-                                        "email": respLogin['email'],
-                                        "token": f"{getToken}",
-                                        "is_active": respLogin['is_active'],
-                                        "is_staff": respLogin['is_staff'],
-                                        "profile": {
-                                            'id': profileData[0],
-                                            'name': profileData[1],
-                                            'description': profileData[2],
-                                            'image': profileData[3]
-                                        }
-                                    })
+        return jsonify({'response': 417})
 
-                                return jsonify({
-                                    "id": respLogin['id'],
-                                    "username": respLogin['username'],
-                                    "email": respLogin['email'],
-                                    "token": f"{getToken}",
-                                    "is_active": respLogin['is_active'],
-                                    "is_staff": respLogin['is_staff'],
-                                    "profile": {
-                                        'id': 0,
-                                        'name': 'none',
-                                        'description': 'none',
-                                        'image': 'none'
-                                    }
-                                })
+    return jsonify({'response': 403})
 
-                            return jsonify({'response': 'Incorrect Password 2'})
 
-                        return jsonify({'response': 'Incorrect Password 1'})
 
-                    return jsonify({'response': 'Incorrect Password'})
+"""
 
-                return jsonify({'response': 'Incorrect Email'})
+LOGOUT ROUTE
 
-            return jsonify({'response': 'Null data'})
+Gets a json with a field called token in which 
+the user's session token is received, then the 
+session is deleted.
 
-        return jsonify({'response': 'No data'})
+RESPONSE CODES:
+
+Correctly logout - 200
+
+Error on logout - 500
+
+
+"""
 
 
 @app.route('/api/v1/users/logout', methods=['POST'])
 def Logout():
 
-    if request.method == 'POST':
+    data = request.get_json()
 
-        data = request.get_json()
 
-        if data:
 
-            id = data['token']
+    id = data['token']
 
-            if id:
 
-                respLogout = md.deleteSession(id)
+    respLogout = md.deleteSession(id)
 
-                if respLogout:
+    if respLogout:
 
-                    return jsonify({'response': 'ok'})
+        return jsonify({'response': 200})
 
-            return jsonify({'response': 'Id is null'})
-
-        return jsonify({'response': 'No data'})
-
-    return jsonify({'response': 'Incorrect Method'})
+    return jsonify({'response': 500})
 
 
 @app.route('/api/v1/users/createProfile', methods=['POST'])
@@ -320,9 +337,9 @@ def GetPosts():
 
 @app.route('/api/v1/payment/submitPaymentInfo', methods=['POST'])
 def confirmPaymentIntent():
-    
+
     try:
-        
+
         data = request.get_json()
 
         charge = stripe.Charge.create(
@@ -332,48 +349,49 @@ def confirmPaymentIntent():
             source='tok_visa',
             idempotency_key=data['id']
         )
-        
+
         if charge['paid']:
-            
+
             updated = md.setDonator(data['username'])
-            
+
             if updated:
-                
+
                 return jsonify(charge)
-        
+
     except stripe.error.StripeError as e:
-        
+
         print(e)
         return 'error'
-    
+
+
 @app.route('/api/v1/users/getProfileById', methods=['POST'])
 def getProfileById():
-    
+
     data = request.get_json()
-    
-    id = data['id']    
-    
+
+    id = data['id']
+
     print(id)
-    
+
     resp = md.getProfile(id)
-    
+
     return jsonify({
-        "id":resp[0],
-        "username":resp[1],
-        "description":resp[2],
-        "image":resp[3]
+        "id": resp[0],
+        "username": resp[1],
+        "description": resp[2],
+        "image": resp[3]
     })
-    
-    
+
+
 @app.route('/api/v1/users/getPostsById', methods=['POST'])
 def getPostsById():
-    
+
     data = request.get_json()
-    
+
     id = data['id']
-    
+
     resp = md.getPostsById(id)
-    
+
     return jsonify(resp)
 
 
