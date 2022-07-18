@@ -7,6 +7,15 @@ class Conditionals:
         self.true = True
         self.false = False
         
+    def NullData(self, data):
+        
+        if data:
+            
+            return self.true
+        
+        return error
+        
+        
     def ExistentEmailOrUsername(self, data):
         
         username = data['username']
@@ -19,5 +28,7 @@ class Conditionals:
             
             return self.true
         
-        return self.false
+        return error
+    
+    
     
