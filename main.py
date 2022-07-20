@@ -394,5 +394,21 @@ def getPostsById():
 
     return jsonify(resp)
 
+@app.route('/api/v1/users/follow', methods=['POST'])
+def follow():
+    
+    data = request.get_json()
+    
+    followerId = data['follower']
+    followedId = data['followed']
+
+    resp = md.setFollow(followerId, followedId)
+    
+    if resp: 
+        
+       return jsonify({'response':'ok'})
+   
+    return '', 500 
+
 
 app.run(port=5000, debug=True)

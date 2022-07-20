@@ -317,16 +317,4 @@ def setDonator(username):
     
     return True
 
-def setFollow(follower, followed):
 
-    con = conection()
-    
-    cursor = con.cursor()
-    
-    query = "INSERT INTO Follows (follower_id, followed_id) VALUES ('%s', '%s')" %(follower, followed)
-    
-    cursor.execute(query)
-    
-    con.commit()
-    
-    return True

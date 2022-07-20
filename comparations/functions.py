@@ -31,4 +31,19 @@ class Conditionals:
         return error
     
     
+clase = Conditionals()
+
+a = None
+
+try:
+    
+    clase.NullData(a)
+    clase.ExistentEmailOrUsername()
+    
+    
+    print("Si")
+    
+except:
+    
+    print("No")
     
