@@ -53,13 +53,13 @@ def getExistEmail(email):
 
 
 
-def registerUser(email, username, password):
+def registerUser(email, username, description, image, password):
     
     con = conection()
     
     cursor = con.cursor()
     
-    query = "INSERT INTO Users(email, username, password) VALUES ('%s', '%s', '%s')" %(email, username, password)
+    query = "INSERT INTO Users(email, username, description, image, password) VALUES ('%s', '%s', '%s', '%s')" %(email, username, description, image, password)
     
     cursor.execute(query)
     
@@ -73,7 +73,7 @@ def loginUser(email, password):
     
     cursor = con.cursor()
     
-    query = "SELECT id, username, email, is_active, is_staff FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
+    query = "SELECT id, username, description, image, email, is_active, is_staff FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
     
     cursor.execute(query)
     
@@ -84,9 +84,12 @@ def loginUser(email, password):
         return {
             "id":resp[0][0],
             "username":resp[0][1],
-            "email":resp[0][2],
-            "is_active":resp[0][3],
-            "is_staff":resp[0][4]
+            "email":resp[0][4],
+            "is_active":resp[0][5],
+            "is_staff":resp[0][6],
+            "description":resp[0][2],
+            "image":resp[0][3],
+            
         }
         
     return False
@@ -171,7 +174,7 @@ def getProfile(id):
     
     cursor = con.cursor()
     
-    query = "SELECT id, name, description, imageUrl FROM Profiles WHERE user_id = '%s'" %id
+    query = "SELECT id, username, description, imageUrl FROM Profiles WHERE user_id = '%s'" %id
     
     cursor.execute(query)
     
@@ -330,3 +333,11 @@ def setFollow(follower, followed):
     con.commit()
     
     return True
+
+def getFollow(id):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = "SELECT * FROM Follows WHERE follower = "

@@ -40,8 +40,12 @@ def Register():
     data = request.get_json()
 
     username = data['username']
+    description = data['description']
+    image = data['image']
     email = data['email']
     password = data['password']
+
+    convertImage = processImage(image)
 
     existentEmail = md.getExistEmail(email)
     existentUsername = md.getExistUsername(username)
@@ -50,7 +54,7 @@ def Register():
 
         hPass = genph(password)
 
-        md.registerUser(email, username, hPass)
+        md.registerUser(email, username, description, image, hPass)
 
         getHashedPass = md.getHash(email)
 
@@ -71,10 +75,8 @@ def Register():
                 "is_active": respLogin['is_active'],
                 "is_staff": respLogin['is_staff'],
                 "profile": {
-                    'id': 0,
-                    'name': 'none',
-                    'description': 'none',
-                    'image': 'none'
+                    'description': respLogin['description'],
+                    'image': respLogin['image']
                 }
             })
 
@@ -124,16 +126,7 @@ def Login():
 
                 getToken = f"{GenerateUUID()}"
 
-                respSession = md.generateSession(
-                    respLogin['id'], getToken)
-
-                if respSession:
-
-                    profileData = md.getProfile(respLogin['id'])
-
-                    if profileData:
-
-                        return jsonify({
+                return jsonify({
                             "id": respLogin['id'],
                             "username": respLogin['username'],
                             "email": respLogin['email'],
@@ -141,36 +134,15 @@ def Login():
                             "is_active": respLogin['is_active'],
                             "is_staff": respLogin['is_staff'],
                             "profile": {
-                                'id': profileData[0],
-                                'name': profileData[1],
-                                'description': profileData[2],
-                                'image': profileData[3]
+                                'description': respLogin['description'],
+                                'image': respLogin['image']
                             }
                         })
-
-                    return jsonify({
-                        "id": respLogin['id'],
-                        "username": respLogin['username'],
-                        "email": respLogin['email'],
-                        "token": f"{getToken}",
-                        "is_active": respLogin['is_active'],
-                        "is_staff": respLogin['is_staff'],
-                        "profile": {
-                            'id': 0,
-                            'name': 'none',
-                            'description': 'none',
-                            'image': 'none'
-                        }
-                    })
-
-                return jsonify({'response': 430})
-
             return jsonify({'response': 417})
 
         return jsonify({'response': 417})
 
     return jsonify({'response': 403})
-
 
 
 """
@@ -197,9 +169,7 @@ def Logout():
     data = request.get_json()
 
 
-
     id = data['token']
-
 
     respLogout = md.deleteSession(id)
 
@@ -262,41 +232,41 @@ def CreateProfile():
         return jsonify({'response': 'null data'})
 
 
-@app.route('/api/v1/users/getProfile', methods=['POST'])
-def GetProfile():
+# @app.route('/api/v1/users/getProfile', methods=['POST'])
+# def GetProfile():
 
-    if request.method == 'POST':
+#     if request.method == 'POST':
 
-        data = request.get_json()
+#         data = request.get_json()
 
-        if data:
+#         if data:
 
-            token = data['token']
+#             token = data['token']
 
-            if token:
+#             if token:
 
-                response = md.getIdFromToken(token)
+#                 response = md.getIdFromToken(token)
 
-                if response:
+#                 if response:
 
-                    profileData = md.getProfile(response[0])
+#                     profileData = md.getProfile(response[0])
 
-                    if profileData:
+#                     if profileData:
 
-                        return jsonify({
-                            'profile_id': profileData[0],
-                            'name': profileData[1],
-                            'description': profileData[2],
-                            'image': profileData[3]
-                        })
+#                         return jsonify({
+#                             'profile_id': profileData[0],
+#                             'name': profileData[1],
+#                             'description': profileData[2],
+#                             'image': profileData[3]
+#                         })
 
-                    return jsonify({'response': 'Profile doesnt exist'})
+#                     return jsonify({'response': 'Profile doesnt exist'})
 
-                return jsonify({'response': 'Invalid session'})
+#                 return jsonify({'response': 'Invalid session'})
 
-            return jsonify({'response': 'Null token'})
+#             return jsonify({'response': 'Null token'})
 
-        return jsonify({'response': 'No data'})
+#         return jsonify({'response': 'No data'})
 
 
 @app.route('/api/v1/users/newPost', methods=['POST'])
@@ -394,21 +364,30 @@ def getPostsById():
 
     return jsonify(resp)
 
+
 @app.route('/api/v1/users/follow', methods=['POST'])
 def follow():
-    
+
     data = request.get_json()
-    
+
     followerId = data['follower']
     followedId = data['followed']
 
     resp = md.setFollow(followerId, followedId)
-    
-    if resp: 
-        
-       return jsonify({'response':'ok'})
-   
-    return '', 500 
+
+    if resp:
+
+        return jsonify({'response': 'ok'})
+
+    return '', 500
+
+
+@app.route('/api/v1/users/getFollow', methods=['POST'])
+def getFollowing():
+
+    data = request.get_json()
+
+    id = data['id']
 
 
 app.run(port=5000, debug=True)
