@@ -59,7 +59,7 @@ def registerUser(email, username, description, image, password):
     
     cursor = con.cursor()
     
-    query = "INSERT INTO Users(email, username, description, image, password) VALUES ('%s', '%s', '%s', '%s')" %(email, username, description, image, password)
+    query = "INSERT INTO Users(email, username, description, image, password) VALUES ('%s', '%s', '%s', '%s', '%s')" %(email, username, description, image, password)
     
     cursor.execute(query)
     
@@ -73,7 +73,7 @@ def loginUser(email, password):
     
     cursor = con.cursor()
     
-    query = "SELECT id, username, description, image, email, is_active, is_staff FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
+    query = "SELECT id, username, description, image, email, is_staff FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
     
     cursor.execute(query)
     
@@ -85,8 +85,7 @@ def loginUser(email, password):
             "id":resp[0][0],
             "username":resp[0][1],
             "email":resp[0][4],
-            "is_active":resp[0][5],
-            "is_staff":resp[0][6],
+            "is_staff":resp[0][5],
             "description":resp[0][2],
             "image":resp[0][3],
             
@@ -174,7 +173,7 @@ def getProfile(id):
     
     cursor = con.cursor()
     
-    query = "SELECT id, username, description, imageUrl FROM Profiles WHERE user_id = '%s'" %id
+    query = "SELECT id, username, description, image, is_donator FROM Users WHERE id = '%s'" %id
     
     cursor.execute(query)
     
@@ -207,7 +206,7 @@ def getImageFromId(id):
     
     cursor = con.cursor()
     
-    query = "SELECT imageUrl FROM Profiles WHERE user_id = '%s'" %id
+    query = "SELECT image FROM Profiles WHERE user_id = '%s'" %id
     
     cursor.execute(query)
     
@@ -244,13 +243,13 @@ def getSessionById(id):
     return resp
 
 
-def createPost(id, username, name, postContent, image, profileImage):
+def createPost(id, name, postContent, image, profileImage, date):
     
     con = conection()
     
     cursor = con.cursor()
     
-    query = "INSERT INTO Posts (user_id, username, name, postContent, image, profileImage) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')" %(id, username, name, postContent, image, profileImage)
+    query = "INSERT INTO Posts (user_id, username, postContent, image, profileImage, date) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')" %(id, name, postContent, image, profileImage, date)
     
     cursor.execute(query)
     
@@ -264,13 +263,13 @@ def getPosts():
     
     cursor = con.cursor()
     
-    query = "SELECT id, user_id, username, name, postContent, image, profileImage FROM Posts ORDER BY id DESC LIMIT 50"
+    query = "SELECT id, user_id, username, postContent, image, profileImage, date FROM Posts ORDER BY id DESC LIMIT 50"
     
     cursor.execute(query)
     
     resp = cursor.fetchall()
     
-    obj = {f"{x}": {"id":y[0], "user_id":y[1], "username":y[2], "name":y[3], "postContent":y[4], "image":y[5], "profileImage":y[6]} for x, y in enumerate(resp)}
+    obj = {f"{x}": {"id":y[0], "user_id":y[1], "name":y[2], "postContent":y[3], "image":y[4], "profileImage":y[5], "date":y[6]} for x, y in enumerate(resp)}
     
     return obj
 
@@ -280,13 +279,13 @@ def getPostsById(id):
     
     cursor = con.cursor()
     
-    query = "SELECT id, user_id, username, name, postContent, image, profileImage FROM Posts WHERE user_id = '%s' ORDER BY id DESC LIMIT 50" %id
+    query = "SELECT id, user_id, username, postContent, image, profileImage, date FROM Posts WHERE user_id = '%s' ORDER BY id DESC LIMIT 50" %id
     
     cursor.execute(query)
     
     resp = cursor.fetchall()
     
-    obj = {f"{x}": {"id":y[0], "user_id":y[1], "username":y[2], "name":y[3], "postContent":y[4], "image":y[5], "profileImage":y[6]} for x, y in enumerate(resp)}
+    obj = {f"{x}": {"id":y[0], "user_id":y[1], "name":y[2], "postContent":y[3], "image":y[4], "profileImage":y[5], "date":y[6]} for x, y in enumerate(resp)}
     
     return obj
 
@@ -312,7 +311,7 @@ def setDonator(username):
     
     id = getIdByUsername(username)
     
-    query = "UPDATE Profiles SET is_donator = true AND tier_donator = '1' WHERE user_id = '%s'" %id
+    query = "UPDATE Users SET is_donator = true WHERE user_id = '%s'" %id
     
     cursor.execute(query)
     
@@ -334,10 +333,16 @@ def setFollow(follower, followed):
     
     return True
 
-def getFollow(id):
+def getFollow(id, followedId):
     
     con = conection()
     
     cursor = con.cursor()
     
-    query = "SELECT * FROM Follows WHERE follower = "
+    query = "SELECT * FROM Follows WHERE follower_id = '%s' AND followed_id = '%s'" %(id, followedId)
+    
+    cursor.execute(query)
+    
+    resp = cursor.fetchall()
+    
+    return resp
