@@ -70,6 +70,8 @@ def Register():
 
         md.generateSession(respLogin['id'], getToken)
 
+        md.setFollow(respLogin['id'], respLogin['id'])
+        md.setFollow(respLogin['id'], 0)
 
         return jsonify({
                 "id": respLogin['id'],
@@ -77,6 +79,7 @@ def Register():
                 "email": respLogin['email'],
                 "token": f"{getToken}",
                 "is_staff": respLogin['is_staff'],
+                "is_donator": respLogin['is_donator'],
                 "profile": {
                     'description': respLogin['description'],
                     'image': respLogin['image']
@@ -137,6 +140,7 @@ def Login():
                             "email": respLogin['email'],
                             "token": f"{getToken}",
                             "is_staff": respLogin['is_staff'],
+                            "is_donator": respLogin['is_donator'],
                             "profile": {
                                 'description': respLogin['description'],
                                 'image': respLogin['image']
@@ -368,6 +372,26 @@ def getPostsById():
 
     return jsonify(resp)
 
+@app.route('/api/v1/users/getPostsFollow', methods=['POST'])
+def getPostsFollow():
+    
+    data = request.get_json()
+    
+    id = data['id']
+    
+    resp = md.getFollowsId(id)    
+
+    arr = ''
+
+    for i in resp:
+    
+        arr = arr + f"{i[0]} "
+    
+    dataFollow = arr.replace(' ', ',').rstrip(',')
+        
+    posts = md.getPostsFollowing(dataFollow)    
+    
+    return jsonify(posts)
 
 @app.route('/api/v1/users/follow', methods=['POST'])
 def follow():
@@ -391,8 +415,19 @@ def getFollowing():
 
     data = request.get_json()
 
-    id = data['id']
+    id = data['followerid']
+    followedId = data['followedid']
     
+    resp = md.getFollow(id, followedId)
+    
+    if resp:
+        
+        return jsonify({'response':'ok'}),200
+    
+    return 400
+    
+    
+
     
 
 

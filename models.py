@@ -73,7 +73,7 @@ def loginUser(email, password):
     
     cursor = con.cursor()
     
-    query = "SELECT id, username, description, image, email, is_staff FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
+    query = "SELECT id, username, description, image, email, is_staff, is_donator FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
     
     cursor.execute(query)
     
@@ -88,6 +88,7 @@ def loginUser(email, password):
             "is_staff":resp[0][5],
             "description":resp[0][2],
             "image":resp[0][3],
+            "is_donator":resp[0][6]
             
         }
         
@@ -346,3 +347,33 @@ def getFollow(id, followedId):
     resp = cursor.fetchall()
     
     return resp
+
+def getPostsFollowing(arr):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = "SELECT id, user_id, username, postContent, image, profileImage, date FROM Posts WHERE user_id IN ('%s') ORDER BY id DESC LIMIT 50" %arr
+    
+    cursor.execute(query)
+    
+    resp = cursor.fetchall()
+    
+    obj = {f"{x}": {"id":y[0], "user_id":y[1], "name":y[2], "postContent":y[3], "image":y[4], "profileImage":y[5], "date":y[6]} for x, y in enumerate(resp)}
+    
+    return obj
+
+def getFollowsId(id):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = "SELECT followed_id FROM Follows WHERE follower_id = '%s'" %id
+    
+    cursor.execute(query)
+    
+    vals = cursor.fetchall()
+    
+    return vals
