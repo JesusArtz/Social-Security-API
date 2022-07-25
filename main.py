@@ -1,3 +1,4 @@
+from crypt import methods
 from distutils.log import error
 from locale import currency
 from methods.genUUID import GenerateUUID
@@ -69,9 +70,6 @@ def Register():
         getToken = f"{GenerateUUID()}"
 
         md.generateSession(respLogin['id'], getToken)
-
-        md.setFollow(respLogin['id'], respLogin['id'])
-        md.setFollow(respLogin['id'], 0)
 
         return jsonify({
                 "id": respLogin['id'],
@@ -387,8 +385,8 @@ def getPostsFollow():
     
         arr = arr + f"{i[0]} "
     
-    dataFollow = arr.replace(' ', ',').rstrip(',')
-        
+    dataFollow = arr.replace(' ', ',').rstrip(',') 
+    
     posts = md.getPostsFollowing(dataFollow)    
     
     return jsonify(posts)
@@ -428,7 +426,16 @@ def getFollowing():
     
     
 
+@app.route('/api/v1/users/search', methods=['POST'])
+def search():
     
+    data = request.get_json()
+    
+    search = data['search']
+    
+    a = md.busqueda(search)
+    
+    return jsonify(a)
 
 
 app.run(port=5000, debug=True)

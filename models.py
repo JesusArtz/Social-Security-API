@@ -1,3 +1,4 @@
+import enum
 from lib2to3.pgen2 import token
 import pymysql
 from urllib import response
@@ -354,7 +355,9 @@ def getPostsFollowing(arr):
     
     cursor = con.cursor()
     
-    query = "SELECT id, user_id, username, postContent, image, profileImage, date FROM Posts WHERE user_id IN ('%s') ORDER BY id DESC LIMIT 50" %arr
+    query = "SELECT id, user_id, username, postContent, image, profileImage, date FROM Posts WHERE user_id IN (%s) ORDER BY date DESC LIMIT 50" %arr
+    
+    print(query)
     
     cursor.execute(query)
     
@@ -377,3 +380,19 @@ def getFollowsId(id):
     vals = cursor.fetchall()
     
     return vals
+
+def busqueda(value):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = f"SELECT id, username, image FROM Users WHERE username LIKE '%{value}%'" 
+    
+    cursor.execute(query)
+    
+    resp = cursor.fetchall()
+    
+    results = {f"{x}":{"id":y[0], "user":y[1], "image":y[2]} for x, y in enumerate(resp)}
+    
+    return results
