@@ -379,7 +379,7 @@ def getPostsFollow():
     
     resp = md.getFollowsId(id)    
 
-    arr = ''
+    arr = f'{id} '
 
     for i in resp:
     
