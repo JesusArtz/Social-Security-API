@@ -396,3 +396,34 @@ def busqueda(value):
     results = {f"{x}":{"id":y[0], "user":y[1], "image":y[2]} for x, y in enumerate(resp)}
     
     return results
+
+def getAllUsers():
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = f"SELECT id, username, image FROM Users ORDER BY usernameme " 
+    
+    cursor.execute(query)
+    
+    resp = cursor.fetchall()
+    
+    results = {f"{x}":{"id":y[0], "user":y[1], "image":y[2]} for x, y in enumerate(resp)}
+    
+    return results
+
+
+def emergency(id, name, message, profileImage, latitude, longitude, date):
+    
+    con = conection() 
+    
+    cursor = con.cursor()
+    
+    query = "INSERT INTO Emergencys (user_id, username, message, image, latitude, longitude, date) VALUES ('%s','%s','%s','%s','%s','%s','%s')" %(id, name, message, profileImage, latitude, longitude, date)
+    
+    cursor.execute(query)
+    
+    con.commit()
+    
+    return True

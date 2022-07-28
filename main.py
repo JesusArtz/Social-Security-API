@@ -437,5 +437,29 @@ def search():
     
     return jsonify(a)
 
+@app.route('/api/v1/users/getAllUsers', methods=['GET'])
+def getAllUsers():
+    
+    resp = md.getAllUsers()
+    
+    return resp
+
+
+@app.route('/api/v1/emergency', methods=['POST'])
+def emergencyPost():
+    
+    data = request.get_json()
+    
+    id = data['id']
+    name = data['username']
+    image = data['image']
+    message = data['message']
+    latitude = data['latitude']
+    longitude = data['longitude']
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    md.emergency(id, name, message, image, latitude, longitude, date)
+    
+    return jsonify({'a':'a'})
 
 app.run(port=5000, debug=True)
