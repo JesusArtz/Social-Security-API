@@ -54,13 +54,13 @@ def getExistEmail(email):
 
 
 
-def registerUser(email, username, description, image, password):
+def registerUser(email, username, description, image, password, cp):
     
     con = conection()
     
     cursor = con.cursor()
     
-    query = "INSERT INTO Users(email, username, description, image, password) VALUES ('%s', '%s', '%s', '%s', '%s')" %(email, username, description, image, password)
+    query = "INSERT INTO Users(email, username, description, image, password, zip_code) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')" %(email, username, description, image, password, cp)
     
     cursor.execute(query)
     
@@ -74,7 +74,7 @@ def loginUser(email, password):
     
     cursor = con.cursor()
     
-    query = "SELECT id, username, description, image, email, is_staff, is_donator FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
+    query = "SELECT id, username, description, image, email, is_staff, is_donator, zip_code FROM Users WHERE email = '%s' AND password = '%s'" %(email, password)
     
     cursor.execute(query)
     
@@ -89,8 +89,8 @@ def loginUser(email, password):
             "is_staff":resp[0][5],
             "description":resp[0][2],
             "image":resp[0][3],
-            "is_donator":resp[0][6]
-            
+            "is_donator":resp[0][6],
+            "zip_code":resp[0][7]
         }
         
     return False
@@ -414,16 +414,34 @@ def getAllUsers():
     return results
 
 
-def emergency(id, name, message, profileImage, latitude, longitude, date):
+def emergency(id, name, message, profileImage, latitude, longitude, date, cp):
     
     con = conection() 
     
     cursor = con.cursor()
     
-    query = "INSERT INTO Emergencys (user_id, username, message, image, latitude, longitude, date) VALUES ('%s','%s','%s','%s','%s','%s','%s')" %(id, name, message, profileImage, latitude, longitude, date)
+    query = "INSERT INTO Emergencys (user_id, username, message, image, latitude, longitude, date, zip_code) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')" %(id, name, message, profileImage, latitude, longitude, date, cp)
     
     cursor.execute(query)
     
     con.commit()
     
     return True
+
+def getEmergencys(zip):
+    
+    con = conection()
+    
+    cursor = con.cursor()
+    
+    query = "SELECT id, user_id, username, message, image, date, longitude, latitude FROM Emergencys WHERE zip_code = '%a' ORDER BY date DESC LIMIT 5" %zip
+    
+    cursor.execute(query)
+    
+    data = cursor.fetchall()
+    
+    results = {f"{x}":{"id":y[0], "user_id":y[1], "username":y[2], "message":y[3], "image":y[4], "data":y[5], "longitude":y[6], "latitude":y[7]} for x,y in enumerate(data)}
+    
+    print(results)
+    
+    return results

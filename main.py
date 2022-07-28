@@ -10,6 +10,7 @@ import models as md
 from convertBase64 import processImage, processPostImage
 import stripe
 import datetime
+import requests
 
 app = Flask(__name__)
 flask_cors.CORS(app)
@@ -44,7 +45,9 @@ def Register():
     image = data['image']
     email = data['email']
     password = data['password']
-
+    latitude = data['latitude']
+    longitude = data['longitude']
+    
     try:
         convertImage = processImage(image)
         
@@ -52,7 +55,6 @@ def Register():
         
         convertImage = 'xd'
 
-    print(convertImage)
 
     existentEmail = md.getExistEmail(email)
     existentUsername = md.getExistUsername(username)
@@ -60,8 +62,14 @@ def Register():
     if existentEmail or existentUsername:
 
         hPass = genph(password)
+        
+        requestData = requests.get(f'https://nominatim.openstreetmap.org/reverse.php?lat={latitude}&lon={longitude}&zoom=16&format=jsonv2')
+    
+        jsonGeo = requestData.json()
+    
+        zipCode = jsonGeo['address']['postcode']
 
-        md.registerUser(email, username, description, convertImage, hPass)
+        md.registerUser(email, username, description, convertImage, hPass, zipCode)
 
         getHashedPass = md.getHash(email)
 
@@ -69,7 +77,7 @@ def Register():
 
         getToken = f"{GenerateUUID()}"
 
-        md.generateSession(respLogin['id'], getToken)
+        md.generateSession(respLogin['id'], getToken)     
 
         return jsonify({
                 "id": respLogin['id'],
@@ -78,13 +86,12 @@ def Register():
                 "token": f"{getToken}",
                 "is_staff": respLogin['is_staff'],
                 "is_donator": respLogin['is_donator'],
+                "zip_code":respLogin['zip_code'],
                 "profile": {
                     'description': respLogin['description'],
                     'image': respLogin['image']
                 }
             })
-
-        return jsonify({'response': 430}), 430
 
     return jsonify({'response': 409})
 
@@ -139,6 +146,7 @@ def Login():
                             "token": f"{getToken}",
                             "is_staff": respLogin['is_staff'],
                             "is_donator": respLogin['is_donator'],
+                            "zip_code":respLogin['zip_code'],
                             "profile": {
                                 'description': respLogin['description'],
                                 'image': respLogin['image']
@@ -458,8 +466,25 @@ def emergencyPost():
     longitude = data['longitude']
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    md.emergency(id, name, message, image, latitude, longitude, date)
+    requestData = requests.get(f'https://nominatim.openstreetmap.org/reverse.php?lat={latitude}&lon={longitude}&zoom=16&format=jsonv2')
+    
+    jsonGeo = requestData.json()
+    
+    zipCode = jsonGeo['address']['postcode']
+    
+    md.emergency(id, name, message, image, latitude, longitude, date, zipCode)
     
     return jsonify({'a':'a'})
+
+@app.route('/api/v1/getEmergencys', methods=['POST'])
+def getEmergency():
+    
+    data = request.get_json()
+    
+    zipCode = data['zip_code']
+    
+    respObj = md.getEmergencys(zipCode)
+    
+    return jsonify(respObj)
 
 app.run(port=5000, debug=True)
