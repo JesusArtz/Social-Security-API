@@ -461,7 +461,6 @@ def emergencyPost():
     id = data['id']
     name = data['username']
     image = data['image']
-    message = data['message']
     latitude = data['latitude']
     longitude = data['longitude']
     date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -471,8 +470,10 @@ def emergencyPost():
     jsonGeo = requestData.json()
     
     zipCode = jsonGeo['address']['postcode']
+
+    location = f"Necesito ayuda, me encuentro en: {jsonGeo['display_name']}"
     
-    md.emergency(id, name, message, image, latitude, longitude, date, zipCode)
+    md.emergency(id, name, location, image, latitude, longitude, date, zipCode)
     
     return jsonify({'a':'a'})
 
@@ -487,4 +488,4 @@ def getEmergency():
     
     return jsonify(respObj)
 
-app.run(port=5000, debug=True)
+app.run(ssl_context='adhoc', port=5000, debug=True, host="0.0.0.0")

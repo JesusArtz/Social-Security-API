@@ -6,10 +6,9 @@ from urllib import response
 def conection():
     
     con = pymysql.connect(
-        host='db-mysql-sfo3-50689-do-user-9517177-0.b.db.ondigitalocean.com',
-        user='doadmin',
-        password='AVNS_bsBS1_49gRb0WcTJji6',
-        port=25060,
+        host='127.0.0.1',
+        user='root',
+        password='',
         db='defaultdb'
     )
     
