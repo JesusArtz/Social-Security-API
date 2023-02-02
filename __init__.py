@@ -1,21 +1,19 @@
-import flask
 import flask_cors
-from flask import request, jsonify
-from functools import wraps
 import jwt
+from functools import wraps
+from flask import Flask, request, jsonify
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
 flask_cors.CORS(app)
 
+
 def token_required(f):
+
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
+        token = request.headers.get('x-access-token', None)
 
-        if 'x-access-token' in request.headers:
-                token = request.headers['x-access-token']
-        
-        if not token:
+        if token is None:
             return jsonify({'message': 'Token is missing!'}), 403
 
         data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
