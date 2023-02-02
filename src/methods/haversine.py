@@ -1,19 +1,22 @@
+import random
 import numpy as np
 import math
-import random
 
+from geopy.distance import geodesic
 
 r = 6371000
+lista = []
 
 
 def haversine(lat1, lon1, lat2, lon2):
-
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
+
     a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
     c = 2 * np.arcsin(np.sqrt(a))
+
     return c * r
 
 
@@ -36,7 +39,6 @@ def randlatlon1():
 
     return (round(cf*radLon, 5), round(cf*radLat, 5))
 
-lista = []
 
 for i in range(10000):
     lat1, lon1 = randlatlon1()
@@ -48,20 +50,21 @@ with open('data.txt', 'w') as f:
         f.write("%s" % str(item))
 
 
-from geopy.distance import geodesic
-
 def coordinates_within_distance(coordinates, reference_coordinate, distance):
     within_distance = []
+
     for lat, lon in coordinates:
         if geodesic(reference_coordinate, (lat, lon)).meters <= distance:
             within_distance.append((lat, lon))
+
     return within_distance
+
 
 with open('data.txt', 'r') as f:
     coordenadas = f.read().splitlines()
 
 reference_coordinate = (41.730610, -72.935242)
 distance = 500
-
 coordenadas_cercanas = coordinates_within_distance(coordenadas, reference_coordinate, distance)
+
 print(coordenadas_cercanas)

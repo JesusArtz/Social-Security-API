@@ -1,6 +1,9 @@
-import pymysql
 from dataclasses import dataclass
+
+import pymysql
+
 from src.methods.validations import Validations
+
 
 class Database:
 
@@ -9,9 +12,7 @@ class Database:
         self.user = user
         self.password = password
         self.database = database
-
-    def connect(self):
-        return pymysql.connect(
+        self.connection = pymysql.connect(
             host=self.host,
             user=self.user,
             password=self.password,
@@ -19,27 +20,32 @@ class Database:
         )
 
     def execute(self, query, values=None):
-        connection = self.connect()
-        cursor = connection.cursor()
+        cursor = self.connectioncursor()
+
         cursor.execute(query, values)
-        connection.commit()
-        connection.close()
+        self.connectioncommit()
+        self.connectionclose()
 
     def fetch(self, query, values=None):
-        connection = self.connect()
-        cursor = connection.cursor()
+        cursor = self.connectioncursor()
+
         cursor.execute(query, values)
         data = cursor.fetchall()
-        connection.close()
+
+        self.connectionclose()
+
         return data
 
     def fetchOne(self, query, values=None):
-        connection = self.connect()
-        cursor = connection.cursor()
+        cursor = self.connectioncursor()
+
         cursor.execute(query, values)
         data = cursor.fetchone()
-        connection.close()
+
+        self.connectionclose()
+
         return data
+
 
 @dataclass
 class Models:
@@ -47,15 +53,11 @@ class Models:
     data: dict
 
     def Register(self):
-        
         val = Validations(self.data)
 
         if val.validateRegister():
-
             name = self.data['name']
             email = self.data['email']
             password = self.data['password']
-
-            
 
         return False
