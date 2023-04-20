@@ -488,4 +488,4 @@ def getEmergency():
     
     return jsonify(respObj)
 
-app.run(ssl_context='adhoc', port=5000, debug=True, host="0.0.0.0")
+app.run(host="0.0.0.0")
